@@ -1,21 +1,41 @@
+import telebot
+from telebot import types
 import os
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
-TOKEN = os.getenv("BOT_TOKEN")  # Railway Variables থেকে টোকেন আসবে
+# Bot Token (Render-এর Environment Variables থেকে নেওয়া হবে)
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+bot = telebot.TeleBot(BOT_TOKEN)
 
-async def start(update, context):
-    await update.message.reply_text("হাই! আমি Railway-এ ডিপ্লয় করা টেলিগ্রাম বট 🤖")
+# Start Command
+@bot.message_handler(commands=['start'])
+def start(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton("📊 Balance")
+    btn2 = types.KeyboardButton("👥 Refer")
+    btn3 = types.KeyboardButton("📝 Task Submit")
+    btn4 = types.KeyboardButton("💸 Withdraw")
+    markup.add(btn1, btn2)
+    markup.add(btn3, btn4)
+    
+    bot.send_message(
+        message.chat.id,
+        "👋 Welcome!\n\nChoose an option below:",
+        reply_markup=markup
+    )
 
-async def echo(update, context):
-    await update.message.reply_text(update.message.text)
+# Handle Menu Buttons
+@bot.message_handler(func=lambda message: True)
+def handle_menu(message):
+    if message.text == "📊 Balance":
+        bot.send_message(message.chat.id, "💰 Your current balance is: 0$")
+    elif message.text == "👥 Refer":
+        bot.send_message(message.chat.id, "🔗 Your referral link: https://t.me/YourBotUsername?start=ref123")
+    elif message.text == "📝 Task Submit":
+        bot.send_message(message.chat.id, "✅ Please submit your task details here...")
+    elif message.text == "💸 Withdraw":
+        bot.send_message(message.chat.id, "🏦 Enter the amount you want to withdraw...")
+    else:
+        bot.send_message(message.chat.id, "❌ Invalid option. Please use the menu buttons.")
 
-def main():
-    app = Application.builder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-
-    print("Bot is running...")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+print("Bot is running...")
+bot.infinity_polling()
